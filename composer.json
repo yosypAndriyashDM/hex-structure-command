@@ -16,9 +16,6 @@
     "issues": "https://github.com/yosypAndriyashDM/hex-structure-command/issues",
     "source": "https://github.com/yosypAndriyashDM/hex-structure-command"
   },
-  "autoload": {
-    "files": ["Command/HexagonalStructureCommand/CreateHexagonalStructureCommand.php"]
-  },
   "require": {
 
   }
