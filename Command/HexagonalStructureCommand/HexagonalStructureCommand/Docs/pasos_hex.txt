@@ -1,0 +1,125 @@
+Fase 1 del comando:
+
+preguntar si la respuesta del repositorio es una coleccion / array
+
+abro el vendor customercare/src
+
+busco si existe el directorio mcd
+
+si no existe lo creo ()
+existe, me muevo a dentro de el
+
+dentro de mcd veo que hay Model/Application y Model/Domain, 
+
+me muevo a mcd/Application
+
+veo que hay otros endpoints creados anteriormente, en Applicatio, me creo el mio nuevo: 
+creo el directorio McdLoginAs dentro de application
+
+Me muevo a dentro de McdLoginAs, como va a ser solo de lectura, creo el directorio Read, 
+creo directorio Read (Mcd/Application/Read)
+*si fuese de escritura (guardar) crearia el direcotio Command (Mcd/Application/Command)
+
+Me muevo a Mcd/Application/Read y creo los ficheros GetMcdLoginAs{Query, Response, Service}
+Como es un Read, le añado el Get delante por que va a hacer una operacion tipo get
+* si fuese command, le añadiría el prefijo post o put
+
+--- en el fichero GetMcdLoginAsQuery:
+
+añado el namespace adecuado: $namespace: 'namespace CustomerCare\Mcd\Model\Application\McdLoginAs\Read;'
+*** añado el use ApplicationSericeRequest, de esta interfaz extiende nuestra clase, 
+
+dentro de la clase GetMcdLoginAsQuery añado los atributos por los que se hará la búsqueda en el repositorio
+en mi caso serán: clientId, rdsdbUserId, ambos de tipo int,
+se añade por defecto el atributo filter
+
+se crean los getters de cada propiedad publicos con sus respectivos comentarios -_-
+
+
+-- en el fichero GetMcdLoginAsService
+
+añado el namespace adecuado
+
+creo la clase GetMcdLoginAsService
+
+añado como privada la propiedad repository (esta se consulta en el comando, por si se desea usar otra diferente),
+el supositorio se inyecta desde el service.yaml
+
+se crea el constructor que recibe ese repositorio,
+dentro se declara a la propiedad de clase
+
+despues se crea el método común execute() siempre devuelbe un objeto de tipo ApplicationServiceResponse
+
+el método execute invoca una nueva instancia de McdLoginAsDomainService que es donde se hace toda la lógica de domino,
+a este se le pasa el o los repositorios de los que va a sacar datos
+
+dentro de este, como parametro se recibe la propiedad GetMcdLoginAsQuery $getMcdLoginAsQuery de tipo ApplicationServiceRequest (query)
+
+se crea el cuerpo básico aunque no definitivo del tipo 
+$repositoryResponse = $this->repository->method($query->getFirstAttr(), $query->getScndAttr());
+: $mcdLoginAsResponse = $this->mcdLoginAsRepository->getMcdLoginAsToken($clientId, $rdsdbUserId);
+
+return new GetMcdLoginAsResponse($repositoryResponse->gettAttr...()) donde ... es definido por el Dominio McdLoginAs
+
+-- en el fichero GetMcdLoginAsResponse
+en este fichero se declara el tipo de repsuesta que se pretende obtener del repositorio:
+
+primero añadimos el namespace correcto:
+
+siempre se usara el ApplicationServiceResponse asi que lo añadimos en el use:
+
+definimos la clase: ApplicationServiceResponse que implementa ApplicationServiceResponse
+
+definimos las propiedades de la clase (tomadas del formulario), serán las que devulverá en forma de respuesta
+
+definimos el método __construct, toArray y create
+generamos los getters de las propiedades establecidas
+
+
+
+/**/
+
+Me muevo al directorio Mcd/Domain
+
+Miro si existe la carpeta de mi endpoint (Mcd/Domain/McdLoginAs)
+Si no existe la creo
+me muevo a Mcd/Domain/McdLoginAs
+
+--- dentro creo el fichero clase con el nombre singular de la accion (McdLoginAs.php) 
+creo el contructor con las propiedades que se espera sean devueltas
+
+creo el método create estatico
+creo los getters de las propiedades
+
+
+
+--- dentro creo la interfaz del repositorio para obtener datos de tipo McdLoginAs... McdLoginAsRepository.php
+
+añado el namespace adecuado
+añado el nombre de la interfaz adecuado
+
+el primer método de la interfaz: (en uestro caso) getMcdLoginAs{Token}
+le paso los parámetros obtenidos del formulario
+
+que algo como:
+public function getMcdLoginAsToken(int $clientId, int $rdsdbUserId): array;
+
+dentro creo el directorio Exceptions pero vacío, por si el usuario quisiese definir una excepcion personalizada
+
+--- creo el direcotio Service/
+
+dentro crearia el servicio de domino, McdLoginAsDomainService
+aqui recibo el repositorio desde el cual consultar y dentro
+el método con el mismo nombre que el metodo en el repositorio, que a su vez llama al repo,
+ *** por defecto con el código del application service
+ devuelve un objeto del tipo GetMcdLoginAsResponse
+
+devuelvo los datos transformados en un applicationServiceResponse
+
+... configuraciones yaml ....
+
+
+
+
+....  ...
+

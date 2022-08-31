@@ -1,0 +1,118 @@
+0:
+specify project configurations (in php command config file...)
+
+1- 
+
+Out: "Type PackageName" (puede existir):
+$packageName = [console] -> "EncodeCall"
+
+{
+	Comprueba si existe ese directorio dentro de src/{$i}
+	Si no existe, lo crea con los subdirectorios {Model/[Application, Domain]}
+}
+
+-----------------------------------------------
+2- 
+
+Out: "Type ActionName" {No debe existir, si existe: break}
+$actionName = [console] -> "RegisterNewEncode"
+
+2.1- 
+
+Out: "Type of Action (select one)"
+[
+	1: Read (Read data)
+	2: Command (Send data)
+	3: Read & Command
+]
+
+$actionType = [console] -> "2"
+
+{
+	$actionType (eval) -> 
+	{
+		1: create "/Read/" dir, then create files: {/Read/$actionName . ['Query', 'Response', 'Service']};
+		2: create "/Command/" dir, then create files: {/Command/$actionName . ['Command', 'Response', 'Service']};
+		3: create ["/Read/" dir, "/Command/" dir] Create files for case :1 & :2
+	}
+
+	then:
+	
+	-> create /Domain/$actionName/$actionName{Class}
+	-> create /Domain/$actionName/$actionName . RepositoryInterface {Intarface}
+	-> create /Domain/$actionName/Exceptions/ {empty}
+
+	When dir and files was created:
+}
+
+/*
+
+Read: Query 		-> 	
+Read: Resposne 		-> {property} getter, + toArray()
+Read: Service 		-> construct (), service must instance domain/service (with repository dependency) which have all bussiness-logic 
+
+Command: Command 	-> {property} getter, (with all values which will be posted)
+Command: Response 	-> {responseProperties} with getter (its travel from repository response)
+Command: Service 	-> 	
+				{
+					construct: retrieves command associated repository
+					execute: create domain/service instance with repository argument, and execute then after (->execute)
+					execute method returns (must return) ($actionName . Response) instance object, return it
+				}
+
+
+*/
+
+-----------------------------------------------
+3- 
+
+Out: "In/Out request fields"
+
+if ($actionType = 1) {
+	while $clientResponse != 0 {
+		Out: "Type read-request fields, just name, 0 for finish:"
+		$readClassFields[] = [console] -> 'id', [console] -> 'name' ... 0;
+	}
+	
+	foreach ($readClassFields) {
+		Out: "Select field type": [primitive types list]
+		[
+			1: int
+			2: string
+			3: date
+			
+			...
+			
+			0: custom class or type (modify after)
+		]
+		
+		$commandClassfields[$i] = [console] -> 2 // string
+	}
+}
+
+if ($actionType = 2) {
+	while $clientResponse != 0 {
+		Out: "Type command fields, just name, 0 for finish:"
+		$commandClassfields[] = [console] -> 'id', [console] -> 'name' ... 0;
+	}
+	
+	foreach ($commandClassfields) {
+		Out: "Select field type": [primitive types list]
+		[
+			1: int
+			2: string
+			3: date
+			
+			...
+			
+			0: custom class or type (modify after)
+		]
+		
+		$commandClassfields[$i] = [console] -> 2 // string
+	}
+}
+
+-------------
+
+4- 
+
