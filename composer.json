@@ -18,7 +18,7 @@
   },
   "autoload": {
     "psr-4": {
-      "YosypPro\\HexagonalStructureCommand\\": "Command/HexagonalStructureCommand/"
+      "YosypPro\\HexagonalStructureCommand\\": "src/"
       }
     },
   "require": {
