@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Command\HexagonalStructureCommand\Trait;
+namespace YosypPro\HexagonalStructureCommand\Trait;
 
-use App\Command\HexagonalStructureCommand\CommandInputContainer;
-use App\Command\HexagonalStructureCommand\Templates\BasePhpClassTemplate;
+use YosypPro\HexagonalStructureCommand\CommandInputContainer;
+use YosypPro\HexagonalStructureCommand\Templates\BasePhpClassTemplate;
 use RuntimeException;
 
 trait CommandBodyStepsTrait {

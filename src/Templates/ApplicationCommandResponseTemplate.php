@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Command\HexagonalStructureCommand\Templates;
+namespace YosypPro\HexagonalStructureCommand\Templates;
 
 class ApplicationCommandResponseTemplate extends BasePhpClassTemplate
 {

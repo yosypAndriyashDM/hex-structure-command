@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Command\HexagonalStructureCommand;
+namespace YosypPro\HexagonalStructureCommand;
 
-use App\Command\HexagonalStructureCommand\Trait\FileTrait;
-use App\Command\HexagonalStructureCommand\Trait\IOTrait;
+use YosypPro\HexagonalStructureCommand\Trait\FileTrait;
+use YosypPro\HexagonalStructureCommand\Trait\IOTrait;
 use RuntimeException;
-use App\Command\HexagonalStructureCommand\Trait\CommandBodyStepsTrait;
+use YosypPro\HexagonalStructureCommand\Trait\CommandBodyStepsTrait;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\QuestionHelper;

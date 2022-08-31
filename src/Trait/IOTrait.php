@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Command\HexagonalStructureCommand\Trait;
+namespace YosypPro\HexagonalStructureCommand\Trait;
 
 use Symfony\Component\Console\Question\Question;
 

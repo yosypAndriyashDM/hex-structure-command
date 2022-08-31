@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Command\HexagonalStructureCommand;
+namespace YosypPro\HexagonalStructureCommand;
 
 class CommandInputContainer {
 

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Command\HexagonalStructureCommand\Trait;
+namespace YosypPro\HexagonalStructureCommand\Trait;
 
-use App\Command\HexagonalStructureCommand\PathHelper;
+use YosypPro\HexagonalStructureCommand\PathHelper;
 use RuntimeException;
 
 trait FileTrait {

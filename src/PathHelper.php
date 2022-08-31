@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Command\HexagonalStructureCommand;
+namespace YosypPro\HexagonalStructureCommand;
 
-use ApiPlatform\Core\Exception\RuntimeException;
+use RuntimeException;
 
 class PathHelper {
 

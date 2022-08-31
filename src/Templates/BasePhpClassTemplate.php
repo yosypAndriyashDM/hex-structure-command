@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Command\HexagonalStructureCommand\Templates;
+namespace YosypPro\HexagonalStructureCommand\Templates;
 
-use App\Command\HexagonalStructureCommand\CommandInputContainer;
+use YosypPro\HexagonalStructureCommand\CommandInputContainer;
 
 class BasePhpClassTemplate {
 
