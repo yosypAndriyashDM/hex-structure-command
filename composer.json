@@ -1,9 +1,9 @@
 {
-  "name": "yosypAndriyashdm/hex-structure-command",
+  "name": "yosyppro/hexagonalstructurecommand",
   "type": "command",
   "description": "Create simple and basic hexagonal structure in few seconds on symfony 5 framework",
   "keywords": ["symfony5", "hexagonal", "command-generator"],
-  "homepage": "https://github.com/yosypAndriyashDM/hex-structure-command",
+  "homepage": "https://github.com/yosypPro/hexagonalStructureCommand",
   "license": "MIT",
   "authors": [
     {
@@ -13,8 +13,8 @@
     }
   ],
   "support": {
-    "issues": "https://github.com/yosypAndriyashDM/hex-structure-command/issues",
-    "source": "https://github.com/yosypAndriyashDM/hex-structure-command"
+    "issues": "https://github.com/yosypPro/hexagonalStructureCommand/issues",
+    "source": "https://github.com/yosypPro/hexagonalStructureCommand"
   },
   "require": {
 
