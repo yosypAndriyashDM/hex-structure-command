@@ -1,7 +1,7 @@
 {
   "name": "yosyppro/hexagonalstructurecommand",
   "type": "command",
-  "description": "Create simple and basic hexagonal structure in few seconds on symfony 5 framework",
+  "description": "Create simple and basic hexagonal structure in few seconds, for symfony 5 framework",
   "keywords": ["symfony5", "hexagonal", "command-generator"],
   "homepage": "https://github.com/yosypPro/hexagonalStructureCommand",
   "license": "MIT",
