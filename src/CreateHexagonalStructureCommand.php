@@ -254,11 +254,8 @@ class CreateHexagonalStructureCommand extends Command
     /**
      * @throws RuntimeException
      */
-    private function loadYaml($fileName)
+    private function loadYaml($filePath)
     {
-        // configuration file must be in config/commands/ path
-        $filePath = $this->commandPath . 'Configuration/' . $fileName;
-
         try {
             return YamlConfigurationHelper::loadConfiguration($filePath, 'commandConfiguration');
         } catch (ParseException $exception) {

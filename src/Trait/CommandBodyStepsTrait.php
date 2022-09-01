@@ -18,15 +18,51 @@ trait CommandBodyStepsTrait {
      */
     private function loadYamlCommandConfigurationStep(): void
     {
-        $title = '> Loading command configuration file... ("' . $this->configurationFile . '")';
+        $title = '> Loading command configuration file...';
 
         $this->writeLine($this->repeatChar(strlen($title), '-'));
         $this->writeLine($title);
+        $this->writeLine();
 
-        $configuration = $this->loadYaml($this->configurationFile);
+        // Check if project has self "command_configuration.yaml" in  src/Command/HexagonalStructureCommand/Configuration path
+        $customConfiguration = [];
+        $selfConfigurationFilePath =
+            $this->projectPath . 'src' . DIRECTORY_SEPARATOR . 'Command' . DIRECTORY_SEPARATOR . 'HexagonalStructureCommand' .
+            DIRECTORY_SEPARATOR . 'Configuration' . DIRECTORY_SEPARATOR;
+
+        $selfConfigurationFile = $selfConfigurationFilePath . $this->configurationFile;
+        
+        // if not exist file on theese path, show advertistment to user
+        if (!file_exists($selfConfigurationFile)) {
+            $this->writeLine();
+            $this->writeComment($this->repeatChar(64, '-'));
+            $this->writeComment('Self application command configuration not found (looking for ' . $selfConfigurationFile . ')');
+            $this->writeComment('Please create this file to store the ideal configuration for your project to avoid possible future errors.');
+            $this->writeComment('Default configuration may vary throughout the development of the command');
+            $this->writeLine();
+            $this->writeComment('Tip: you can copy the default command-config file into ' . $selfConfigurationFilePath . ' path');
+            $this->writeComment($this->repeatChar(64, '-'));
+            $this->writeLine();
+
+        } else {
+            $customConfiguration = $this->loadYaml($selfConfigurationFile);
+        }
+        
+        // if exist, compare two existing files and join/merge config (self-project config file will be first)
+
+        // default configuration file
+        $configuration = $this->loadYaml($this->commandPath . 'Configuration' . DIRECTORY_SEPARATOR . $this->configurationFile);
 
         if (!$configuration) {
             throw new RuntimeException('Invalid YAML configuration');
+        }
+
+        // merge config files into single config array
+        foreach ($configuration as $key => $configItem) {
+            if (isset($customConfiguration[$key])) {
+                $configuration[$key] = $customConfiguration[$key];
+                $this->writeSuccess('Import ' . $key . ' configuration from custom file done');
+            }
         }
 
         $namespaceConfig = $configuration['namespaceConfig'] ?? null;
@@ -40,9 +76,12 @@ trait CommandBodyStepsTrait {
         }
 
         $this->configurationData = $configuration;
-        $this->writeSuccess('> Command configuration file was successfully loaded...');
-
+        $this->writeLine();
+        $this->writeLine();
+        $this->writeSuccess('> Command configuration successfully loaded...');
         $this->writeLine($this->repeatChar(strlen($title), '-'));
+        $this->writeLine();
+        $this->writeLine();
         $this->writeLine();
     }
 
@@ -140,109 +179,6 @@ trait CommandBodyStepsTrait {
         }
     }
 
-    private function createPackageFilesStep(): void
-    {
-        $templatesConfig = $this->configurationData['templates'];
-        $packageActionType = $this->commandInputContainer->getInput('packageApplicationActionType');
-        $classFilesToParse = [];
-
-        // QUERY/READ FILES
-        if ($packageActionType === self::PACKAGE_ACTION_TYPE_READ_AND_COMMAND || $packageActionType === self::PACKAGE_ACTION_TYPE_READ) {
-
-            $readConfig = $templatesConfig['read'];
-            $applicationQueryPath = $this->commandInputContainer->getInput('packageApplicationEntityQueryPath');
-
-            foreach ($readConfig as $key => $value) {
-                $className = ucfirst($this->commandInputContainer->getInput('packageAction')) . $value['suffix'];
-                $fileName = $className . '.php';
-                $filePath = $applicationQueryPath . $fileName;
-
-                $classFilesToParse[] = array_merge($value, [
-                    'filePath' => $filePath,
-                    'className' => $className
-                ]);
-            }
-        }
-
-        // COMMAND FILES
-        if ($packageActionType === self::PACKAGE_ACTION_TYPE_READ_AND_COMMAND || $packageActionType === self::PACKAGE_ACTION_TYPE_COMMAND) {
-            $commandConfig = $templatesConfig['command'];
-            $applicationCommandPath = $this->commandInputContainer->getInput('packageApplicationEntityCommandPath');
-
-            foreach ($commandConfig as $key => $value) {
-                $className = ucfirst($this->commandInputContainer->getInput('packageAction')) . $value['suffix'];
-                $fileName = $className . '.php';
-                $filePath = $applicationCommandPath . $fileName;
-
-                $classFilesToParse[] = array_merge($value, [
-                    'filePath' => $filePath,
-                    'className' => $className
-                ]);
-            }
-        }
-
-        // DOMAIN & ENTITY FILES
-        $domainConfig = $templatesConfig['domain'];
-
-        foreach ($domainConfig as $key => $value) {
-            $className = match ($key) {
-                'repositoryInterface', 'entity', 'entityCollection' => $this->commandInputContainer->getInput('packageEntityName'),
-                'service' => $this->commandInputContainer->getInput('packageAction')
-            };
-
-            $filePath = match ($key) {
-                'repositoryInterface' => $this->commandInputContainer->getInput('packageDomainEntityRepositoryPath'),
-                'service' => $this->commandInputContainer->getInput('packageDomainEntityServicePath'),
-                'entity', 'entityCollection' => $this->commandInputContainer->getInput('packageDomainEntityModelPath')
-            };
-
-            $className = ucfirst($className) . $value['suffix'];
-            $fileName = $className . '.php';
-            $filePath = $filePath . $fileName;
-
-            $classFilesToParse[] = array_merge($value, [
-                'filePath' => $filePath,
-                'className' => $className
-            ]);
-        }
-
-        $title = 'Creating package files:';
-        $this->writeLine();
-        $this->writeSuccess($this->repeatChar(64, '-'));
-        $this->writeSuccess($title);
-        $this->writeSuccess($this->repeatChar(64, '-'));
-
-        $classFilesToParse = BasePhpClassTemplate::sortByDependencies($classFilesToParse);
-        $createdInstances = [];
-
-        foreach ($classFilesToParse as $item) {
-
-            $templateDispatcher = BasePhpClassTemplate::getNamespace() . '\\' . $item['templateClassDispatcher'];
-            if (!class_exists($templateDispatcher)) {
-                $this->writeComment('Template parser for class template ' . $item['templateClassDispatcher'] . ' not found, please create this file! [continue...]');
-                continue;
-            }
-
-            try {
-                /** @var BasePhpClassTemplate $templateDispatcher */
-                $instance = new $templateDispatcher(
-                    $this->configurationData,
-                    $this->commandInputContainer,
-                    $this->getTemplateContent($item['template']),
-                    $item,
-                    $createdInstances
-                );
-
-                $createdInstances[$item['templateClassDispatcher']] = $instance;
-                $parsedTemplate = $instance->generateParsedTemplateOutput();
-
-                $successClassFileCreated = $this->createFile($item['filePath'], $parsedTemplate);
-            } catch (RuntimeException $exception) {
-
-            }
-        }
-    }
-
     private function packageApplicationActionInputStep(): void
     {
         if ($this->isDebuggingMode === true) {
@@ -266,7 +202,6 @@ trait CommandBodyStepsTrait {
         $this->writeTitle('Select action type for "' . $this->commandInputContainer->getInput('packageAction') . '":');
         $this->writeLine('1: Read (get data)');
         $this->writeLine('2: Command (put data)');
-        $this->writeLine('3: Read & command (get and put data)');
 
         if ($this->isDebuggingMode === true) {
             $packageApplicationActionTypeUserResponse = self::PACKAGE_ACTION_TYPE_READ_AND_COMMAND;
@@ -278,7 +213,7 @@ trait CommandBodyStepsTrait {
         $allowedResponse = [
             self::PACKAGE_ACTION_TYPE_READ,
             self::PACKAGE_ACTION_TYPE_COMMAND,
-            self::PACKAGE_ACTION_TYPE_READ_AND_COMMAND
+            //self::PACKAGE_ACTION_TYPE_READ_AND_COMMAND
         ];
 
         if (!in_array($packageApplicationActionTypeUserResponse, $allowedResponse)) {
@@ -507,6 +442,109 @@ trait CommandBodyStepsTrait {
 
         } catch (RuntimeException $exception) {
             throw new RuntimeException('Can not create package path: ' . $exception->getMessage());
+        }
+    }
+
+    private function createPackageFilesStep(): void
+    {
+        $templatesConfig = $this->configurationData['templates'];
+        $packageActionType = $this->commandInputContainer->getInput('packageApplicationActionType');
+        $classFilesToParse = [];
+
+        // QUERY/READ FILES
+        if ($packageActionType === self::PACKAGE_ACTION_TYPE_READ_AND_COMMAND || $packageActionType === self::PACKAGE_ACTION_TYPE_READ) {
+
+            $readConfig = $templatesConfig['read'];
+            $applicationQueryPath = $this->commandInputContainer->getInput('packageApplicationEntityQueryPath');
+
+            foreach ($readConfig as $key => $value) {
+                $className = ucfirst($this->commandInputContainer->getInput('packageAction')) . $value['suffix'];
+                $fileName = $className . '.php';
+                $filePath = $applicationQueryPath . $fileName;
+
+                $classFilesToParse[] = array_merge($value, [
+                    'filePath' => $filePath,
+                    'className' => $className
+                ]);
+            }
+        }
+
+        // COMMAND FILES
+        if ($packageActionType === self::PACKAGE_ACTION_TYPE_READ_AND_COMMAND || $packageActionType === self::PACKAGE_ACTION_TYPE_COMMAND) {
+            $commandConfig = $templatesConfig['command'];
+            $applicationCommandPath = $this->commandInputContainer->getInput('packageApplicationEntityCommandPath');
+
+            foreach ($commandConfig as $key => $value) {
+                $className = ucfirst($this->commandInputContainer->getInput('packageAction')) . $value['suffix'];
+                $fileName = $className . '.php';
+                $filePath = $applicationCommandPath . $fileName;
+
+                $classFilesToParse[] = array_merge($value, [
+                    'filePath' => $filePath,
+                    'className' => $className
+                ]);
+            }
+        }
+
+        // DOMAIN & ENTITY FILES
+        $domainConfig = $templatesConfig['domain'];
+
+        foreach ($domainConfig as $key => $value) {
+            $className = match ($key) {
+                'repositoryInterface', 'entity', 'entityCollection' => $this->commandInputContainer->getInput('packageEntityName'),
+                'service' => $this->commandInputContainer->getInput('packageAction')
+            };
+
+            $filePath = match ($key) {
+                'repositoryInterface' => $this->commandInputContainer->getInput('packageDomainEntityRepositoryPath'),
+                'service' => $this->commandInputContainer->getInput('packageDomainEntityServicePath'),
+                'entity', 'entityCollection' => $this->commandInputContainer->getInput('packageDomainEntityModelPath')
+            };
+
+            $className = ucfirst($className) . $value['suffix'];
+            $fileName = $className . '.php';
+            $filePath = $filePath . $fileName;
+
+            $classFilesToParse[] = array_merge($value, [
+                'filePath' => $filePath,
+                'className' => $className
+            ]);
+        }
+
+        $title = 'Creating package files:';
+        $this->writeLine();
+        $this->writeSuccess($this->repeatChar(64, '-'));
+        $this->writeSuccess($title);
+        $this->writeSuccess($this->repeatChar(64, '-'));
+
+        $classFilesToParse = BasePhpClassTemplate::sortByDependencies($classFilesToParse);
+        $createdInstances = [];
+
+        foreach ($classFilesToParse as $item) {
+
+            $templateDispatcher = BasePhpClassTemplate::getNamespace() . '\\' . $item['templateClassDispatcher'];
+            if (!class_exists($templateDispatcher)) {
+                $this->writeComment('Template parser for class template ' . $item['templateClassDispatcher'] . ' not found, please create this file! [continue...]');
+                continue;
+            }
+
+            try {
+                /** @var BasePhpClassTemplate $templateDispatcher */
+                $instance = new $templateDispatcher(
+                    $this->configurationData,
+                    $this->commandInputContainer,
+                    $this->getTemplateContent($item['template']),
+                    $item,
+                    $createdInstances
+                );
+
+                $createdInstances[$item['templateClassDispatcher']] = $instance;
+                $parsedTemplate = $instance->generateParsedTemplateOutput();
+
+                $successClassFileCreated = $this->createFile($item['filePath'], $parsedTemplate);
+            } catch (RuntimeException $exception) {
+
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 commandConfiguration:
   executor: Yosyp Andriyash
   rootPath: vendor/customercare/customercare/src/
+
   namespaceConfig:
     rootNamespace: CustomerCare\
     calculatePathNamespaceCommencingBy: customercare/customercare/src/

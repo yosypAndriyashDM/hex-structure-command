@@ -75,7 +75,7 @@ class DomainEntityServiceTemplate extends BasePhpClassTemplate
     {
         $body =
             PHP_EOL .
-            $this->drawTabSpace(2) . '// method body here... ' .
+            $this->drawTabSpace(2) . '// domain service logic here... ' .
             PHP_EOL .
             PHP_EOL;
 
