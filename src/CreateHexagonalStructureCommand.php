@@ -82,7 +82,7 @@ class CreateHexagonalStructureCommand extends Command
         $this->helper = $this->getHelper('question');
         $this->commandInputContainer = new CommandInputContainer();
 
-        $this->projectPath = realpath(dirname(__DIR__).'/../..') . DIRECTORY_SEPARATOR;
+        $this->projectPath = realpath(dirname(__DIR__).'/../../..') . DIRECTORY_SEPARATOR;
         $this->commandPath = realpath(__DIR__) . DIRECTORY_SEPARATOR;
 
         $commandStartedAt = microtime(true);
