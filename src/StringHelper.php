@@ -6,7 +6,12 @@ class StringHelper {
 
     public const SPACE_DELIMITER = ' ';
 
-    public static function toLowerCamelCase($string, $delimiter = self::SPACE_DELIMITER)
+    /**
+     * @param $string
+     * @param string $delimiter
+     * @return mixed|string
+     */
+    public static function toLowerCamelCase($string, string $delimiter = self::SPACE_DELIMITER): mixed
     {
         $stringParts = explode($delimiter, $string);
 
