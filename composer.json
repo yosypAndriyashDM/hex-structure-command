@@ -16,6 +16,12 @@
     "issues": "https://github.com/yosypPro/hexagonalStructureCommand/issues",
     "source": "https://github.com/yosypPro/hexagonalStructureCommand"
   },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": {
+      "*": "dist"
+    }
+  },
   "autoload": {
     "psr-4": {
       "YosypPro\\HexagonalStructureCommand\\": "src/"
