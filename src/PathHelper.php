@@ -12,9 +12,15 @@ class PathHelper {
      */
     public static function createDir($dir): bool
     {
-        if (!is_dir($dir) && !mkdir($dir) && !is_dir($dir)) {
-            var_dump($dir);
-            throw new RuntimeException($dir);
+        $routePath = DIRECTORY_SEPARATOR;
+        $dirComponents = explode('/', str_replace('\\', '/', $dir));
+
+        foreach ($dirComponents as $current) {
+            $routePath .= ($current . DIRECTORY_SEPARATOR);
+
+            if (!is_dir($routePath) && !mkdir($routePath) && !is_dir($routePath)) {
+                throw new RuntimeException($dir);
+            }
         }
 
         return true;

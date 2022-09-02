@@ -91,7 +91,7 @@ trait CommandBodyStepsTrait {
     private function packageNameInputStep(): void
     {
         try {
-            $packageNameUserResponse = trim($this->getUserInputRequest('Type your root package name, for example: Product'));
+            $packageNameUserResponse = trim($this->getUserInputRequest('Define context name, for example: Product'));
             $packageNameUserResponse = $this->formatToLowerCamelCase($packageNameUserResponse);
 
             if ($packageNameUserResponse === self::DEBUG_MAGIC_WORD) {
@@ -114,7 +114,7 @@ trait CommandBodyStepsTrait {
             );
 
             // Store package paths to create it after:
-            $modelPath = $this->commandInputContainer->getInput('packageRootPath') . 'Model' . DIRECTORY_SEPARATOR;
+            $modelPath = $this->commandInputContainer->getInput('packageRootPath');
             $applicationPath = $modelPath . 'Application' . DIRECTORY_SEPARATOR;
             $domainPath = $modelPath . 'Domain' . DIRECTORY_SEPARATOR;
 
@@ -133,7 +133,7 @@ trait CommandBodyStepsTrait {
             if ($this->isDebuggingMode === true) {
                 $packageEntityNameUserResponse = self::DEBUG_PACKAGE_ENTITY_NAME;
             } else {
-                $packageEntityNameUserResponse = trim($this->getUserInputRequest('Type your Package Entity name, for example: Laptop'));
+                $packageEntityNameUserResponse = trim($this->getUserInputRequest('Type your Entity name, for example: Laptop'));
             }
 
             $packageEntityNameUserResponse = ucfirst($this->formatToLowerCamelCase($packageEntityNameUserResponse));
@@ -184,7 +184,7 @@ trait CommandBodyStepsTrait {
         if ($this->isDebuggingMode === true) {
             $packageActionUserResponse = self::DEBUG_PACKAGE_ACTION_NAME;
         } else {
-            $packageActionUserResponse = $this->getUserInputRequest('Type your package action, for example: "get active contacts history" or "GetActiveContacts"');
+            $packageActionUserResponse = $this->getUserInputRequest('Define your package use case, for example: "get cheap products"');
         }
 
         $packageActionUserResponse = $this->formatToLowerCamelCase($packageActionUserResponse);
@@ -199,9 +199,10 @@ trait CommandBodyStepsTrait {
 
     private function packageApplicationActionTypeInputStep(): void
     {
-        $this->writeTitle('Select action type for "' . $this->commandInputContainer->getInput('packageAction') . '":');
-        $this->writeLine('1: Read (get data)');
-        $this->writeLine('2: Command (put data)');
+        $useCaseName = ucfirst($this->commandInputContainer->getInput('packageAction'));
+        $this->writeTitle('Define use-case type for "' . $useCaseName . '":');
+        $this->writeLine('1: Query');
+        $this->writeLine('2: Command');
 
         if ($this->isDebuggingMode === true) {
             $packageApplicationActionTypeUserResponse = self::PACKAGE_ACTION_TYPE_READ_AND_COMMAND;
@@ -213,7 +214,7 @@ trait CommandBodyStepsTrait {
         $allowedResponse = [
             self::PACKAGE_ACTION_TYPE_READ,
             self::PACKAGE_ACTION_TYPE_COMMAND,
-            //self::PACKAGE_ACTION_TYPE_READ_AND_COMMAND
+            self::PACKAGE_ACTION_TYPE_READ_AND_COMMAND
         ];
 
         if (!in_array($packageApplicationActionTypeUserResponse, $allowedResponse)) {
@@ -228,7 +229,8 @@ trait CommandBodyStepsTrait {
         ], true)) {
             $this->commandInputContainer->addInput(
                 'packageApplicationEntityQueryPath',
-                $this->commandInputContainer->getInput('packageApplicationEntityPath') . 'Read' . DIRECTORY_SEPARATOR
+                $this->commandInputContainer->getInput('packageApplicationEntityPath') . 'Query' .
+                DIRECTORY_SEPARATOR . $useCaseName . DIRECTORY_SEPARATOR
             );
         }
 
@@ -237,38 +239,19 @@ trait CommandBodyStepsTrait {
         ], true)) {
             $this->commandInputContainer->addInput(
                 'packageApplicationEntityCommandPath',
-                $this->commandInputContainer->getInput('packageApplicationEntityPath') . 'Command' . DIRECTORY_SEPARATOR
+                $this->commandInputContainer->getInput('packageApplicationEntityPath') . 'Command' .
+                DIRECTORY_SEPARATOR . $useCaseName . DIRECTORY_SEPARATOR
             );
         }
     }
 
     private function packageApplicationActionReadArgsStep():void
     {
-        // Define application query params
-        $this->writeTitle('Define query filter params');
-        $this->writeLine('Type one by one your query params (for example: id, name, phoneNumber)');
-        $this->writeComment('Please use camelCase or separated by space format: "phoneNumber" or "phone number"');
-
-        if ($this->isDebuggingMode === true) {
-            $readQueryParams = self::DEBUG_DATA_PARAMETERS;
-        } else {
-            $readQueryParams = $this->getUserPackageApplicationParameters();
-        }
-
-        $this->commandInputContainer->addInput('packageApplicationActionReadQueryParams', $readQueryParams);
-
-        if (count($readQueryParams) > 0 && !$this->isDebuggingMode) {
-            // add each query param type
-            $this->getUserPackageApplicationParametersTypes($readQueryParams);
-            $this->commandInputContainer->addInput('packageApplicationActionReadQueryParams', $readQueryParams);
-        }
-
         // Define entity attributes
         $entityName = $this->commandInputContainer->getInput('packageEntityName');
-        $this->writeTitle('Define "' . $entityName . '" entity class attributes');
+        $this->writeTitle('Define "' . $entityName . '" entity attributes');
         $this->writeLine('Type one by one your expected response keys (for example: id, name, phoneNumber)');
         $this->writeComment('Please use camelCase or separated by space format: "phoneNumber" or "phone number"');
-
 
         if ($this->isDebuggingMode === true) {
             $params = self::DEBUG_DATA_PARAMETERS;
@@ -285,21 +268,65 @@ trait CommandBodyStepsTrait {
             $this->commandInputContainer->addInput('packageDomainEntityAttributes', $params);
         }
 
+        // Define application query params
+        $entityParams = $params;
+
+        $this->writeTitle('Query filter params definition...');
+
+        if ($this->isDebuggingMode === true) {
+            $readQueryParams = $entityParams;
+        } else {
+            $readQueryParams = $this->getBoolUserResponseByYesOrNotStep($entityParams);
+        }
+
+        $this->commandInputContainer->addInput('packageApplicationActionReadQueryParams', $readQueryParams);
+
         // Check if response is an item collection (array)
         $this->writeTitle('Response collection');
-        $this->writeLine('Is the response of the application-read a data collection (array)?');
-        $this->writeComment('Select option:');
-        $this->writeLine('1: YES, is a data collection response');
-        $this->writeLine('2: NO, is not a data collection response');
+        $this->writeLine('Is the response of the application query a data collection (array)?');
+        $this->writeComment('Select option: "y" or "n"');
 
         // if (1): create EntityList class as list of Entity+ items
         if ($this->isDebuggingMode === true) {
             $applicationReadResponseIsList = self::APPLICATION_RESPONSE_IS_DATA_COLLECTION;
         } else {
-            $applicationReadResponseIsList = $this->packageApplicationCheckDataIsListSubStep();
+            $applicationReadResponseIsList = $this->getBoolUserResponseByYesOrNot();
         }
 
         $this->commandInputContainer->addInput('packageApplicationActionReadResponseIsCollection', $applicationReadResponseIsList);
+    }
+
+    private function getBoolUserResponseByYesOrNotStep($entityProperties): array
+    {
+        $queryParams = [];
+        foreach ($entityProperties as $entityProperty) {
+            $this->writeLine('Do you want to use "' . $entityProperty['name'] . '" as application query param?');
+            $this->writeComment('Select option: "y" or "n"');
+
+            $userResponse = $this->getBoolUserResponseByYesOrNot();
+            if ($userResponse === 1) {
+                $queryParams[] = $entityProperty;
+            }
+        }
+
+        return $queryParams;
+    }
+
+    private function getBoolUserResponseByYesOrNot(): int
+    {
+        try {
+            $userResponse = strtolower(trim($this->getUserInputRequest()));
+
+            if (!in_array($userResponse, ['y', 'n'])) {
+                throw new RuntimeException('Invalid response');
+            }
+
+            return $userResponse === 'y' ? 1 : 0;
+
+        } catch (RuntimeException) {
+            $this->writeError('Invalid answer, type one: "y" or "n"');
+            return $this->getBoolUserResponseByYesOrNot();
+        }
     }
 
     private function packageApplicationActionCommandArgsStep():void
@@ -322,16 +349,15 @@ trait CommandBodyStepsTrait {
             $this->getUserPackageApplicationParametersTypes($params);
             $this->commandInputContainer->addInput('packageApplicationActionCommandParams', $params);
 
-            $this->writeTitle('Command parameters type');
+            $this->writeTitle('Command data as collection');
             $this->writeLine('Is the command parameters a data collection (array)? (Post multiple data...)');
-            $this->writeComment('Select one of the above:');
-            $this->writeLine('1: YES, is a data collection command');
-            $this->writeLine('2: NO, is not a data collection command');
+            $this->writeComment('Select one: "y" or "n"');
 
-            $applicationCommandParametersIsList = $this->packageApplicationCheckDataIsListSubStep();
+            $applicationCommandParametersIsList = $this->getBoolUserResponseByYesOrNot();
             $this->commandInputContainer->addInput('packageApplicationActionCommandParametersIsCollection', $applicationCommandParametersIsList);
         }
 
+        /*
         $this->writeTitle('Define your expected command response attributes');
         $this->writeLine('Type one by one your expected command response keys (for example: id, name, phoneNumber)');
         $this->writeComment('Please use camelCase or separated by space format: "phoneNumber" or "phone number"');
@@ -340,9 +366,11 @@ trait CommandBodyStepsTrait {
             $params = self::DEBUG_DATA_PARAMETERS;
         } else {
             $params = $this->getUserPackageApplicationParameters();
-        }
+        } */
 
-        $this->commandInputContainer->addInput('packageApplicationActionCommandResponseParams', $params);
+        $this->commandInputContainer->addInput('packageApplicationActionCommandResponseParams',
+            $this->commandInputContainer->getInput('packageDomainEntityAttributes')
+        );
 
         // Define command response params types
         if (count($params) > 0 && !$this->isDebuggingMode) {
@@ -353,34 +381,15 @@ trait CommandBodyStepsTrait {
 
         $this->writeTitle('Command Response type');
         $this->writeLine('Is the response of the application-command a data collection (array)?');
-        $this->writeComment('Select one of the above:');
-        $this->writeLine('1: YES, is a data collection response');
-        $this->writeLine('2: NO, is not a data collection response');
+        $this->writeComment('Select: "y" or "n"');
 
         if ($this->isDebuggingMode === true) {
             $applicationCommandResponseIsList = self::APPLICATION_RESPONSE_IS_DATA_COLLECTION;
         } else {
-            $applicationCommandResponseIsList = $this->packageApplicationCheckDataIsListSubStep();
+            $applicationCommandResponseIsList = $this->getBoolUserResponseByYesOrNot();
         }
 
         $this->commandInputContainer->addInput('packageApplicationActionCommandResponseIsCollection', $applicationCommandResponseIsList);
-    }
-
-    private function packageApplicationCheckDataIsListSubStep(): int
-    {
-        try {
-            $userResponse = (int) trim($this->getUserInputRequest());
-
-            if (!in_array($userResponse, [1, 2])) {
-                throw new RuntimeException('Invalid response');
-            }
-
-            return $userResponse;
-
-        } catch (RuntimeException) {
-            $this->writeError('Invalid answer, must be 1 or 2');
-            $this->packageApplicationCheckDataIsListSubStep();
-        }
     }
 
     private function createPackagePathsStep(): void
